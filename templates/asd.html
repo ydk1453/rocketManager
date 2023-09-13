@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+ 
+  
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"></script>
+</head>
+<body>
+
+<style>
+
+.button {
+  display: inline-block;
+  padding: 5px 15px;
+  font-size: 10px;
+  cursor: pointer;
+  text-align: center;
+  text-decoration: none;
+  outline: none;
+  color: #fff;
+  background-color: #4CAF50;
+  border: none;
+  border-radius: 15px;
+  box-shadow: 0 5px #999;
+}
+
+.button:hover {background-color: #3e8e41}
+
+.button:active {
+  background-color: #3e8e41;
+  box-shadow: 0 5px #666;
+  transform: translateY(4px);
+}
+
+.header {
+  overflow: hidden;
+  background-color: #f1f1f1;
+  padding: 10px 10px;
+}
+
+.header a {
+  float: left;
+  color: black;
+  text-align: center;
+  padding: 12px;
+  text-decoration: none;
+  font-size: 18px; 
+  line-height: 15px;
+  border-radius: 4px;
+}
+
+.header a.logo {
+  font-size: 15px;
+  font-weight: bold;
+}
+
+.header a:hover {
+  background-color: #ddd;
+  color: black;
+}
+
+.header a.active {
+  background-color: dodgerblue;
+  color: white;
+}
+
+.header-right {
+  float: right;
+}
+
+@media screen and (max-width: 500px) {
+  .header a {
+    float: none;
+    display: block;
+    text-align: left;
+  }
+  
+  .header-right {
+    float: none;
+  }
+}
+
+</style>
+
+
+<div class="container">
+  
+  <div class="header">
+  <a href="https://www.miltron.com.tr/" class="logo"><img src="https://static.wixstatic.com/media/3e2256_a08f6151690842b9b2c9720b46ca34f9~mv2.png/v1/fill/w_196,h_40,al_c,q_85,usm_0.66_1.00_0.01,enc_auto/image%201.png"/></a>
+  <div class="header-right">
+    <a class="active" href="#home">Rocket Panel</a>
+    <a href="#contact">Contact</a>
+    <a href="#about">About</a>
+  </div>
+</div>
+
+<div style="padding-left:20px">
+  <h1 style="text-align:center">ROCKET LIST</h1>
+  
+  
+</div>
+  
+  
+  <div class="table-responsive">          
+  <table class="table">
+    <thead>
+      <tr>
+	  {% for key in rockets %}
+        <th style="text-align:center; background-color:steelblue; border-radius:15px; color:white; border-color:black">{{key['model']}} ({{key['id']}})</th>
+		</td>
+	{% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+	  {% for key in rockets %}
+        <td>
+        	<table class="table">  
+
+				<tr>
+                      <td>
+                          <table style="width:100%">
+                              <tr style="text-align:center;">
+                                  <td>
+                                      <button class="button" onclick="rocketProcess('{{key['id']}}','launch')"">Launch Rocket</button>
+                                  </td>
+                                  <td>
+                                      <button style="background-color:blue" class="button" onclick="rocketProcess('{{key['id']}}','deploy')"">Deploy Rocket</button>
+                                  </td>
+                                  <td>
+                                      <button style="background-color:red" class="button" onclick="rocketProcess('{{key['id']}}','cancel')">Cancel Launch</button>
+                                  </td>
+                              </tr>                     
+                          </table>                   
+                      </td>
+                </tr>			
+        		<tr>
+        			<td>
+        				<label>        
+        					Rocket Name : {{key['model']}}      
+        				</label>
+        			</td>       
+        		</tr>      
+        		<tr>
+        			<td>
+        				<label>        
+        					Rocket ID : {{key['id']}}      
+        				</label>
+        			</td>       
+        		</tr>  
+					<tr>
+        			<td>
+        				<label>        
+        					Rocket Details:      
+        				</label><br/>                      
+                        <div id="place_for_details_{{key['id']}}">
+                          
+                      </td>       
+                  </tr> 
+				  
+        		<tr>
+        			<td>
+        				<label>        
+        					Telemetry Info:      
+        				</label><br/>                      
+                        <div id="place_for_telemetry_{{key['id']}}">
+                          
+                      </td>       
+                  </tr> 
+				<tr>
+        			<td>
+        				<label>        
+        					Payload Info:      
+        				</label><br/>                      
+                        <div>
+                          <table style="width:100%; background-color:gray; text-align:center; border-radius: 5px; color:white">
+
+                              <tr>
+                                  <td>
+                                      <label>Description: {{key['payload']['description']}}</label>
+                                  </td>
+                              </tr>
+                              <tr>
+                                  <td>
+                                      <label>Weight : {{key['payload']['weight']}} kg</label>
+                                  </td>
+
+                              </tr>   
+                                                          
+                          </table>
+                      </td>       
+                  </tr> 
+                  
+
+
+              </table>  
+            
+            </div>
+        </td> 
+		{% endfor %}		       
+      </tr>
+      
+      
+   
+    </tbody>
+  </table>
+  </div>
+</div>
+
+<div id="place_for_suggestions"></div>
+
+  
+  <footer style="text-align:center"> Rocket Manager v2.3 Miltron &copy; 2023 All right reserved. </footer>
+  
+</body>
+</html>
+
+
+
+<script>
+
+function rocketProcess(id,processType) {
+	var text = id+'#'+processType;
+    $.ajax({
+      url: "/operations",
+      type: "get",
+      data: {jsdata: text},
+      success: function(response) {
+      },
+      error: function(xhr) {
+        //Do Something to handle error
+      }
+    });
+}
+
+
+function loadlink(){
+
+	var text = '';
+    $.ajax({
+      url: "/weather",
+      type: "get",
+      data: {jsdata: text},
+      success: function(response) {
+        $("#place_for_suggestions").html(response);
+      },
+      error: function(xhr) {
+        //Do Something to handle error
+      }
+    });
+}
+
+loadlink(); // This will run on page load
+setInterval(function(){
+    loadlink() // this will run after every 5 seconds
+}, 1500);
+
+
+function loadtelemetry(){
+
+	{% for key in rockets %}
+	var text = '{{key['id']}}';
+    $.ajax({
+      url: "/telemetry",
+      type: "get",
+      data: {jsdata: text},
+      success: function(response) {
+        $("#place_for_telemetry_{{key['id']}}").html(response);
+      },
+      error: function(xhr) {
+        //Do Something to handle error
+      }
+    });
+	{% endfor %}
+}
+
+loadtelemetry(); // This will run on page load
+setInterval(function(){
+    loadtelemetry() // this will run after every 5 seconds
+}, 150);
+
+function loadRocketDetails(){
+
+	{% for key in rockets %}
+	var text = '{{key['id']}}';
+    $.ajax({
+      url: "/rocketDetails",
+      type: "get",
+      data: {jsdata: text},
+      success: function(response) {
+        $("#place_for_details_{{key['id']}}").html(response);
+      },
+      error: function(xhr) {
+        //Do Something to handle error
+      }
+    });
+	{% endfor %}
+}
+
+loadRocketDetails(); // This will run on page load
+setInterval(function(){
+    loadRocketDetails() // this will run after every 5 seconds
+}, 1500);
+
+</script>
