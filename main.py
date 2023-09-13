@@ -7,8 +7,12 @@ Created on 12 Eyl 2023
 import requests
 import telemetryReader
 
-from struct import unpack, calcsize
+from struct import unpack
 FORMAT = '>B10sBBfffffHB'
+
+import logging
+log = logging.getLogger('werkzeug')
+log.setLevel(logging.ERROR)
 
 # Importing flask module in the project is mandatory
 # An object of Flask class is our WSGI application.
@@ -36,14 +40,19 @@ def telemetry():
     ret = {}
     if rocketId in threads.keys(): 
         ret = threads[rocketId].queue.get()
-        formatedData = unpack(FORMAT, ret)
-        jsonData = {}
-        jsonData['Altitude'] = formatedData[4]
-        jsonData['Speed'] = formatedData[5]
-        jsonData['Acceleration'] = formatedData[6]
-        jsonData['Thrust'] = formatedData[7]
-        jsonData['Temperature'] = formatedData[8]
-        ret = jsonData
+        try:
+            
+            formatedData = unpack(FORMAT, ret)
+            jsonData = {}
+            jsonData['Altitude'] = formatedData[4]
+            jsonData['Speed'] = formatedData[5]
+            jsonData['Acceleration'] = formatedData[6]
+            jsonData['Thrust'] = formatedData[7]
+            jsonData['Temperature'] = formatedData[8]
+            ret = jsonData
+            
+        except Exception as e:
+            pass
         
     return render_template('telemetry.html', telemetryVals=ret)
  
@@ -56,24 +65,30 @@ def rocketDetails():
     apiUrl = "http://localhost:5000/rockets"
     response = requests.get(apiUrl, headers={"X-API-Key":"API_KEY_1"})
     rockets = response.json()
-    
     details= {}
-    for rocket in rockets:
-        if rocket['id'] == rocketId:
-            details['status'] = rocket['status']
-            details['mass'] = rocket['mass']
-            details['launched-Time'] = rocket['timestamps']['launched']
-            details['deployed-Time'] = rocket['timestamps']['deployed']
-            details['failed-Time'] = rocket['timestamps']['failed']
-            details['cancelled-Time'] = rocket['timestamps']['cancelled']
+    if response.status_code == 200:
+    
+        try:
+            details= {}
+            for rocket in rockets:
+                if 'id' in rocket.keys():
+                    if rocket['id'] == rocketId:
+                        details['status'] = rocket['status']
+                        details['mass'] = rocket['mass']
+                        details['launched-Time'] = rocket['timestamps']['launched']
+                        details['deployed-Time'] = rocket['timestamps']['deployed']
+                        details['failed-Time'] = rocket['timestamps']['failed']
+                        details['cancelled-Time'] = rocket['timestamps']['cancelled']
+                        
+                        details['altitude'] = rocket['altitude']
+                        details['speed'] = rocket['speed']
+                        details['acceleration'] = rocket['acceleration']
+                        details['thrust'] = rocket['thrust']
+                        details['temperature'] = rocket['temperature']
+                        break
+        except Exception as e:
+                pass
             
-            details['altitude'] = rocket['altitude']
-            details['speed'] = rocket['speed']
-            details['acceleration'] = rocket['acceleration']
-            details['thrust'] = rocket['thrust']
-            details['temperature'] = rocket['temperature']
-            break
-        
     return render_template('rocketDetails.html', details=details) 
  
 @app.route('/weather')
@@ -82,18 +97,20 @@ def suggestions():
 
     apiUrl = "http://localhost:5000/weather"
     response = requests.get(apiUrl, headers={"X-API-Key":"API_KEY_1"})
-    weather = response.json()
+    weatherResponse = response.json()
     
-    if 'precipitation' in weather.keys():
-        weatherStatus = ""
-        for key,val in weather['precipitation'].items():
-            if val == True:
-                weatherStatus += f'-{key}'
-    
-        weather['weatherStatus'] = weatherStatus
-        weather['precipitation']['probability'] = weather['precipitation']['probability']*100
+    if response.status_code == 200:
+        weather = weatherResponse
+        if 'precipitation' in weatherResponse.keys():
+            weatherStatus = ""
+            for key,val in weatherResponse['precipitation'].items():
+                if val == True:
+                    weatherStatus += f'-{key}'
         
-        weather['humidity']= weather['humidity']*100
+            weather['weatherStatus'] = weatherStatus
+            weather['precipitation']['probability'] = weatherResponse['precipitation']['probability']*100
+            
+            weather['humidity']= weatherResponse['humidity']*100
 
     return render_template('suggestions.html', suggestions=weather)
  
@@ -121,6 +138,7 @@ def operations():
  
 rockets = [] 
 threads = {}
+weather = {}
 # main driver function
 if __name__ == '__main__':
  
