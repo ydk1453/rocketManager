@@ -3,4 +3,4 @@ flask rocket managing application
 
 to start : python main.py
 
-required packages : flask
+required packages : flask, requests
