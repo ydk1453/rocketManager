@@ -24,20 +24,23 @@ app = Flask(__name__,template_folder=template_dir)
 
 @app.route('/')
 def index():
- 
+    rockets, threads = initRockets()
     return render_template('index.html', rockets=rockets)
  
 @app.route('/telemetry')
 def telemetry(): 
-    rocketId = request.args.get('jsdata')  
+    rocketId = request.args.get('jsdata') 
+    outPutHtml = {}
     telemetryVals = {}
     telemetryVals['status'] = 'not active'
-    if rocketId in threads.keys():  
-        ret = threads[rocketId].queue.get()  
-        while not threads[rocketId].queue.empty():      
-            ret = threads[rocketId].queue.get()             
+    for key,thread in threads.items():
+        ret = thread.queue.get()  
+        while not thread.queue.empty():
+            ret = thread.queue.get()    
         try:                
             formatedData = unpack(FORMAT, ret)
+            if formatedData[4] == formatedData[5]:
+                break
             jsonData = {}
             jsonData['Altitude'] = formatedData[4]
             jsonData['Speed'] = formatedData[5]
@@ -48,46 +51,41 @@ def telemetry():
             telemetryVals['status'] = 'active'
         except Exception as e:
             pass
+        outPutHtml[key] = (render_template('telemetry.html', telemetryVals=telemetryVals))
         
         
-    return render_template('telemetry.html', telemetryVals=telemetryVals)
+    return outPutHtml
  
  
  
 @app.route('/rocketDetails')
-def rocketDetails(): 
-    rocketId = request.args.get('jsdata')  
-       
+def rocketDetails():       
     apiUrl = 'rockets'
     _, rockets = restObject.get(apiUrl=apiUrl)
-                  
+    outPutHrml = {}           
     details= {}
-    for rocket in rockets:
-        if 'id' in rocket.keys():
-            if rocket['id'] == rocketId:
-                details['status'] = rocket['status']
-                details['mass'] = rocket['mass']
-                details['launched-Time'] = rocket['timestamps']['launched']
-                details['deployed-Time'] = rocket['timestamps']['deployed']
-                details['failed-Time'] = rocket['timestamps']['failed']
-                details['cancelled-Time'] = rocket['timestamps']['cancelled']
-                
-                details['altitude'] = rocket['altitude']
-                details['speed'] = rocket['speed']
-                details['acceleration'] = rocket['acceleration']
-                details['thrust'] = rocket['thrust']
-                details['temperature'] = rocket['temperature']
-                break
+    for rocket in rockets:       
+        details['status'] = rocket['status']
+        details['mass'] = rocket['mass']
+        details['launched-Time'] = rocket['timestamps']['launched']
+        details['deployed-Time'] = rocket['timestamps']['deployed']
+        details['failed-Time'] = rocket['timestamps']['failed']
+        details['cancelled-Time'] = rocket['timestamps']['cancelled']
+        
+        details['altitude'] = rocket['altitude']
+        details['speed'] = rocket['speed']
+        details['acceleration'] = rocket['acceleration']
+        details['thrust'] = rocket['thrust']
+        details['temperature'] = rocket['temperature']
+        outPutHrml[rocket['id']] = render_template('rocketDetails.html', details=details) 
 
             
-    return render_template('rocketDetails.html', details=details) 
+    return outPutHrml
  
 @app.route('/weather')
-def suggestions():
-     
+def suggestions():     
     apiUrl = 'weather'
-    _, weatherResponse = restObject.get(apiUrl=apiUrl)
-        
+    _, weatherResponse = restObject.get(apiUrl=apiUrl)        
     weather = weatherResponse
     if 'precipitation' in weatherResponse.keys():
         weatherStatus = ""
@@ -110,7 +108,8 @@ def operations():
     
     if processType == "launch":
         apiUrl = f"rocket/{id}/status/launched"
-        statusCode = restObject.put(apiUrl=apiUrl)        
+        statusCode = restObject.put(apiUrl=apiUrl)  
+        rockets, threads = initRockets()      
     elif processType == 'deploy':
         apiUrl = f"rocket/{id}/status/deployed"
         statusCode = restObject.put(apiUrl=apiUrl)
@@ -128,15 +127,29 @@ def operations():
 rockets = [] 
 threads = {}
 weather = {}
+
+
+def initRockets():
+    threads = {}
+    rockets = [] 
+    try:
+        apiUrl = "rockets"   
+        _, rockets = restObject.get(apiUrl=apiUrl)             
+        for rocket in rockets:
+            readerThread = telemetryReader.telemetryReader(rocket['telemetry']['port'],rocket['telemetry']['host'] )
+            readerThread.start()
+            threads[rocket['id']] = readerThread
+    except Exception:
+        pass 
+    
+    return rockets, threads
+    
+    
 # main driver function
 if __name__ == '__main__':
  
-    apiUrl = "rockets"   
-    _, rockets = restObject.get(apiUrl=apiUrl)    
-            
-    for rocket in rockets:
-        readerThread = telemetryReader.telemetryReader(rocket['telemetry']['port'],rocket['telemetry']['host'] )
-        readerThread.start()
-        threads[rocket['id']] = readerThread
-
-    app.run(port=12345)
+    rockets, threads = initRockets()
+    if len(rockets) != 0:
+        app.run(host='0.0.0.0', port=12345)
+    else:
+        print('Please check Rocket Backend Application Status!')

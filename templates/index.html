@@ -258,48 +258,52 @@ function loadlink(){
 loadlink(); // This will run on page load
 setInterval(function(){
     loadlink() // this will run after every 5 seconds
-}, 1500);
+}, 2500);
 
 
 function loadtelemetry(){
 
-	{% for key in rockets %}
-	var text = '{{key['id']}}';
+	
+	var text = '-';
     $.ajax({
       url: "/telemetry",
       type: "get",
       data: {jsdata: text},
       success: function(response) {
-        $("#place_for_telemetry_{{key['id']}}").html(response);
+	  {% for key in rockets %}
+        $("#place_for_telemetry_{{key['id']}}").html(response["{{key['id']}}"]);
+		{% endfor %}
       },
       error: function(xhr) {
         //Do Something to handle error
       }
     });
-	{% endfor %}
+	
 }
 
 loadtelemetry(); // This will run on page load
 setInterval(function(){
     loadtelemetry() // this will run after every 5 seconds
-}, 1000);
+}, 200);
 
 function loadRocketDetails(){
 
-	{% for key in rockets %}
-	var text = '{{key['id']}}';
+	
+	var text = '-';
     $.ajax({
       url: "/rocketDetails",
       type: "get",
       data: {jsdata: text},
       success: function(response) {
-        $("#place_for_details_{{key['id']}}").html(response);
+	  {% for key in rockets %}
+        $("#place_for_details_{{key['id']}}").html(response["{{key['id']}}"]);
+		{% endfor %}
       },
       error: function(xhr) {
         //Do Something to handle error
       }
     });
-	{% endfor %}
+	
 }
 
 loadRocketDetails(); // This will run on page load

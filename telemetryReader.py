@@ -28,10 +28,11 @@ class telemetryReader(Thread):
         self.readerSocket.connect((self.ip, self.portNo))
         
     def run(self):
+        
         while True:
             data = self.readerSocket.recv(1024)
-           
             self.queue.put(data) 
+            
         
         
         
