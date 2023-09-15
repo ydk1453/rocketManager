@@ -116,8 +116,7 @@ def operations():
     elif processType == 'cancel':
         apiUrl = f"rocket/{id}/status/launched"
         statusCode = restObject.delete(apiUrl=apiUrl)
-       
-    print(statusCode)
+           
     if statusCode == 200:
         resp = jsonify({'success': 'Operation is OK'}), statusCode
     else:
